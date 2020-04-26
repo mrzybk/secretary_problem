@@ -5,27 +5,24 @@ Created on Thu Mar 26 13:31:55 2020
 @author: lackent
 """
 
-import numpy as np
+def hire_by_given_rule(n,D,rel_ranks):
+    for i in range(n):
+        y=rel_ranks[i]
+        if D[i][y-1]:
+            return i
+    return n-1
 
-def generate_candidates(n):
-    '''
-    Creates a list of candidates with their rank, and also outputs the relative ranks
-    
-    Parameters:
-    n: number of candidates
-    
-    Returns:
-    rel_ranks: relative ranks of the candidates
-    b: ranks of the candidates
-    '''
-    b=np.arange(1,n+1)
-    np.random.shuffle(b)
-    rel_ranks=[1 for i in range(n)]
-    for j in range(1,n):
-        r=1
-        for i in b[:j]:
-            if b[j]>i:
-                r+=1
-        rel_ranks[j]=r
-    return rel_ranks,[i for i in b]
+def evaluate_the_hiring_strategy(n,U,D,CD):
+    n=len(D)
+    m,counter=0,0
+    for c in range(len(CD)):
+        a,b=CD[c]
+        j=hire_by_given_rule(n,D,a)
+        m+=U[b[j]-1]
+        counter+=1
+    if counter>0:
+        return m/counter
+    else:
+        return 0
+
 
