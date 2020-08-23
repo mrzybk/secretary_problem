@@ -8,7 +8,7 @@ Created on Thu Mar 26 13:31:55 2020
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-def plot_decision_graph(D1,D2=[]):
+def plot_decision_graph(D1,D2=[],if_latex=False):
     
     rect_attributes=[(0.5,1),(0.75,0.5)]
     
@@ -32,26 +32,31 @@ def plot_decision_graph(D1,D2=[]):
         for a in range(len(D)):
             for b in range(len(D[a])):
                 if a==len(D)-1:
-                    edge_color='green' if use_edge else 'None'
+                    edge_color='#0C7BDC' if use_edge else 'None'
                     ax_g=ax1.add_patch(
                             patches.Rectangle((a+coord_shift, b+coord_shift), width, width,
-                                              facecolor='green',alpha=0.5,edgecolor=edge_color)) 
+                                              facecolor='#0C7BDC',alpha=0.75,edgecolor=edge_color)) 
                 else:
                     if D[a][b]:
-                        edge_color='green' if use_edge else 'None'
+                        edge_color='#0C7BDC' if use_edge else 'None'
                         ax_g=ax1.add_patch(
                             patches.Rectangle((a+coord_shift, b+coord_shift), width, width,
-                                              facecolor='green',alpha=0.5,edgecolor=edge_color))
+                                              facecolor='#0C7BDC',alpha=0.75,edgecolor=edge_color))
                     else:
-                        edge_color='red' if use_edge else 'None'
+                        #reject colors
+                        edge_color='#FFC20A' if use_edge else 'None'
                         ax_r=ax1.add_patch(
                             patches.Rectangle((a+coord_shift, b+coord_shift), width, width,
-                                              facecolor='red',alpha=0.5,edgecolor=edge_color))
+                                              facecolor='#FFC20A',alpha=0.5,edgecolor=edge_color))
     plt.ylim((0.5,len(D)+0.5))
     plt.xlim((0.5,len(D)+0.5))
-    plt.xlabel('Number of Observed Candidates')
-    plt.ylabel('Relative Rank of the Last Candidate')
-    plt.title('Optimal Strategy')
+    if if_latex:
+        plt.xlabel('r')
+        plt.ylabel('s')
+    else:
+        plt.xlabel('Number of Observed Candidates')
+        plt.ylabel('Relative Rank of the Last Candidate')
+        plt.title('Optimal Strategy for N='+str(len(D)))
     plt.legend((ax_g,ax_r),['accept','reject'])
     return None
 
