@@ -56,7 +56,7 @@ def generate_candidates_v2(n):
 
 
 def generate_single_data_from_the_stock_data(n,last_data_date,df):
-    df['val']=df.iloc[:,1].apply(lambda x:float(x.split('$')[1]))
+    df['val']=df.iloc[:,1].apply(lambda x:float(x.split('$')[-1]))
     b_s=[v for v in df[df.Date<last_data_date].iloc[0:n].sort_values(by='Date',ascending=True).val]
     
     #find the relative ranks out of the values

@@ -24,6 +24,7 @@ def create_payoff_array(n,problem,k):
     -minimize_expected_squared_distance_to_rank_k:1.51
     -minimize_expected_distance_to_rank_median:1.53
     -minimize_expected_squared_distance_to_rank_median:1.54
+    -pick_around_median_rose1982:1.6
     -pick_exactly_the_kth_best:2
     -pick_from_the_top_k_best:3
     -pick_odds_or_evens_depending_on_k:4
@@ -54,6 +55,9 @@ def create_payoff_array(n,problem,k):
     elif problem==1.53:
         k=(n+1)/2
         return [-(i-k)**2 for i in range(1,n+1)]
+    elif problem==1.6:
+        med=(n+1)/2
+        return [1 if i>=med-med**k/2 and i<=med+med**k/2 else 0 for i in range(1,n+1)]
     elif problem==2:
         return [1 if i==k else 0 for i in range(1,n+1)]
     elif problem==3:
