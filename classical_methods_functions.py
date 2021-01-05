@@ -193,6 +193,16 @@ def dynamic_solution_general_form_archived(n,U):
             Expecteds[i][b-1]=max(expected_a,expected_r)
     return Decisions_Accept,Expecteds,[sum(d) for d in Decisions_Accept]
 
+def calculate_the_payoff_when_item_accepted(n,U):
+    I=np.zeros((n,n))
+    I[-1]=U.copy()
+    for r in range(-2,-n-1,-1):
+        for s in range(0,n+r+1):
+            #I[r][s]=I[r+1][s]*(1-(s+1)/(n+r+2))+I[r+1][s+1]*((s+1)/(n+r+2))
+            I[r][s]=(I[r+1][s]*(n+r+1-s)+I[r+1][s+1]*(s+1))/(n+r+2)
+    return I
+    
+
 def dynamic_solution_general_form(n,U):
     '''n: the number of candidates
        U: payoffs for each candidate, U[x-1] is the payoff of best xth candidate. 
@@ -202,12 +212,7 @@ def dynamic_solution_general_form(n,U):
        For example: U=[1,0,0,.....] gives the classical problem. U=[-1,-2,..,-n] gives the expected rank minimization
     '''
     Decisions_Accept=[[True for i in range(j)] for j in range(1,n+1)]
-    I=np.zeros((n,n))
-    I[-1]=U.copy()
-    for r in range(-2,-n-1,-1):
-        for s in range(0,n+r+1):
-            #I[r][s]=I[r+1][s]*(1-(s+1)/(n+r+2))+I[r+1][s+1]*((s+1)/(n+r+2))
-            I[r][s]=(I[r+1][s]*(n+r+1-s)+I[r+1][s+1]*(s+1))/(n+r+2)
+    I=calculate_the_payoff_when_item_accepted(n,U)
 
     E=np.zeros((n,n))
     E[-1]=U.copy()
@@ -238,21 +243,30 @@ def find_expected_nr_of_observed_candidates(N,D):
 
 def evaluate_the_strategy(n,U,Decisions_Accept):
     ####TODO Update this
-    Possible_Outcomes=[[i+1 for i in range(j)] for j in range(1,n+1)]
-    Expecteds=[[0 for i in range(j)] for j in range(1,n)]+[U]
+    I=calculate_the_payoff_when_item_accepted(n,U)
 
-    e=len(Expecteds)-2
-    for i in range(e,-1,-1):
-        #print(i)
-        arr_0=Possible_Outcomes[i]
-        arr_1=Expecteds[i]
-        a=len(arr_0)
-        expected_r=sum(Expecteds[i+1])/(a+1) #reject
-        for b in Possible_Outcomes[i]:
-            expected_a=sum([prob_of(n,j,a,b)*U[j-1] for j in range(1,n+1)]) #accept
-            
-            if Decisions_Accept[i][b-1]: #rejecting is better
-                Expecteds[i][b-1]=expected_a
+    E=np.zeros((n,n))
+    E[-1]=U.copy()
+    for r in range(-2,-n-1,-1):
+        expected_r=sum(E[r+1])/(n+r+2)
+        for s in range(0,n+r+1):
+            if Decisions_Accept[r][s]:
+                E[r][s]=I[r][s]
             else:
-                Expecteds[i][b-1]=expected_r
+                E[r][s]=expected_r
+
+
+    return Decisions_Accept,E,[sum(d) for d in Decisions_Accept]
     return Decisions_Accept,Expecteds,[sum(d) for d in Decisions_Accept]
+
+
+#classic secretary
+def fast_classic_secretary_solver(N):
+    '''This function returns the number of items need to be observed before picking the relative best'''
+    r=N-1
+    summ_=0
+    while summ_<1:
+        summ_+=1/r
+        r-=1
+        #print(r+1,summ_)
+    return r+1
