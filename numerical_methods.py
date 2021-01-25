@@ -65,7 +65,6 @@ def alpha_threshold_finder_for_multiple_N(Ns,problem,k,s):
             y_pol.append(dfs.iloc[0]['q'])
             y_polN.append(dfs.iloc[0]['q']*N)
             if a==N:
-                
                 return y_a,y_l,y_u,y_pol,y_aN,y_polN
             
         else:
@@ -110,12 +109,13 @@ def alpha_threshold_finder_for_multiple_N(Ns,problem,k,s):
 
             else:
                 for N0 in Ns:
-                    y_a.append(b/N)
-                    y_aN.append(b)
-                    y_u.append((b+0.5)/N)
-                    y_l.append((b-0.5)/N)
-                    y_pol.append(1)
-                    y_polN.append(N)
+                    if N0>=N:
+                        y_a.append(b/N)
+                        y_aN.append(b)
+                        y_u.append((b+0.5)/N)
+                        y_l.append((b-0.5)/N)
+                        y_pol.append(1)
+                        y_polN.append(N)
                 return y_a,y_l,y_u,y_pol,y_aN,y_polN
         
     return y_a,y_l,y_u,y_pol,y_aN,y_polN
@@ -200,12 +200,13 @@ def beta_threshold_finder_for_multiple_N(Ns,problem,k,s):
                 conn.commit()
             else:
                 for N0 in Ns:
-                    y_a.append(b/N)
-                    y_aN.append(b)
-                    y_u.append((b+0.5)/N)
-                    y_l.append((b-0.5)/N)
-                    y_pol.append(1)
-                    y_polN.append(N)
+                    if N0>=N:
+                        y_a.append(b/N)
+                        y_aN.append(b)
+                        y_u.append((b+0.5)/N)
+                        y_l.append((b-0.5)/N)
+                        y_pol.append(1)
+                        y_polN.append(N)
                 return y_a,y_l,y_u,y_pol,y_aN,y_polN
         
     return y_a,y_l,y_u,y_pol,y_aN,y_polN
@@ -214,6 +215,8 @@ def beta_threshold_finder_for_multiple_N(Ns,problem,k,s):
 def extrapolate_the_thresholds(Ns,y_polN_a,func_family='f1'):
     clf = LinearRegression(fit_intercept=True)
     if len(y_polN_a)<3:
+        return 0,0,0
+    if y_polN_a[-1]==Ns[-1]:
         return 0,0,0
     if func_family=='f1':
         clf.fit([[i] for i in Ns],y_polN_a)

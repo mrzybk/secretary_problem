@@ -32,6 +32,7 @@ def create_payoff_array(n,problem,k):
     -pick_primes_except_the_last_k:5.1
     -pick_primes_or_from_the_worst_k:5.2
     -pick_primes_from_the_first_half:5.3
+    -pick_primes_one_of_top_k_primes:5.4
     -pick_from_the_best_k_or_the_worst_k:6
     -pick_the_divisors_of_N:9
     '''
@@ -78,6 +79,16 @@ def create_payoff_array(n,problem,k):
         return [1 if smf.is_prime(i) else 0 for i in range(1,n+1-k)]+[1 for i in range(k)]
     elif problem==5.3:
         return [1 if smf.is_prime(i) and i<n/2 else 0 for i in range(1,n+1)]
+    elif problem==5.4:
+        U=[1 if smf.is_prime(i) else 0 for i in range(1,n+1)]
+        c=0
+        for i in range(len(U)):
+            if c>=k:
+                U[i]=0
+            if U[i]==1:
+                c+=1
+        return U
+            
     elif problem==6:
         return [1 if i<=k or i>n-k else 0 for i in range(1,n+1)]
     elif problem==9:
