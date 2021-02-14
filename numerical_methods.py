@@ -1,13 +1,21 @@
 import classical_methods_functions as cmf
 import numpy as np
 import pandas as pd
-db_address=r"secretary_problem_db.db"
+import matplotlib.pyplot as plt
+
+try:
+    db_address=r"secretary_problem_db.db"
+except:
+    print('couldnt connect to database')
+    pass
 
 import sqlite3
 conn = sqlite3.connect(db_address)
 cur=conn.cursor()
 
 from sklearn.linear_model import LinearRegression
+
+e=np.exp(1)
 
 def find_threshold_interval(D,i):
     '''
@@ -232,7 +240,103 @@ def extrapolate_the_thresholds(Ns,y_polN_a,func_family='f1'):
         return a,b,c
 
 
+    
+def calculate_optimal_payoffs_for_multiple_N(Ns,problem,k):
+    q="select * from optimal_payoffs \
+where problem = {} and k = {}".format(problem,k)
+    df=pd.read_sql_query(q,conn)
+    for N in Ns:
+        dfs=df[df.n==N]
+        if len(dfs)==0:
+            U=cmf.create_payoff_array(N,problem,k)
+            #print(U)
+            D,E,dyn_hiring_rule=cmf.dynamic_solution_general_form(N,U)
 
+            cur.execute("insert or ignore into optimal_payoffs (problem,k,n,p_alpha)\
+                                        values ('{}','{}','{}','{}')".format(problem,k,N,E[0][0]))
+    conn.commit()
+    
+def from_table_alphas_to_optimal_payoffs():
+    q="insert or ignore into optimal_payoffs (problem,k,n,p_alpha) \
+select problem,k,n,avg(p_alpha) as p_alpha from alphas \
+group by problem,k,n"
+    cur.execute(q)
+    conn.commit()
+    
+def plot_winning_probabilities(Ns,problem,k):
+    q="select n,p_alpha p from optimal_payoffs \
+    where problem = {} and k = {} \
+    order by n".format(problem,k)
+    df=pd.read_sql_query(q,conn)
+    df=df[df['n'].isin(Ns)]
+    
+    x=[i for i in df['n']]
+    y=[np.abs(i) for i in df['p']]
+    plt.plot(x,y)
+    
+    plt.xlabel('n')
+    plt.ylabel('P*(n)')
+    
+    
+def print_all_nontrivial_thresholds(Ns,problem,k,rou=6,func_family='f1'):
+    my_dict={}
+    if k>0:
+        s_range=range(1,k+1)
+    else:
+        s_range=range(1,6)
+    #for s in range(1,k+1):
+    for s in s_range:
+        y_a,y_l,y_u,y_pol_a,y_aN,y_polN_a=alpha_threshold_finder_for_multiple_N(Ns,problem,k,s)
+        a,b,c=extrapolate_the_thresholds(Ns,y_polN_a,func_family=func_family)
+        if a>0 and a<1:
+            #a,b,c=np.round(a,rou),np.round(b,rou),np.round(c,rou)
+            #a,b,c='%.6f' %a,'%.6f' %b,'%.6f' %c
+            if func_family=='f1':
+                f='{}n {} {}'.format('%.6f' %a,'-' if b < 0 else '+','%.6f' %np.abs(b))
+            elif func_family=='f2':
+                f='{}n {} {} {} {}/n'.format('%.6f' %a,'-' if b < 0 else '+','%.6f' %np.abs(b),
+                                             '-' if c < 0 else '+','%.6f' %np.abs(c))
+            my_dict[('alpha_{}'.format(s),func_family)]=f
+            #print('{} & alpha_{} & {}'.format(k,s,f))
+        y_a,y_l,y_u,y_pol_a,y_aN,y_polN_a=beta_threshold_finder_for_multiple_N(Ns,problem,k,s)
+        a,b,c=extrapolate_the_thresholds(Ns,y_polN_a,func_family=func_family)
+        if a>0 and a<1:
+            #a,b,c='%.6f' %a,'%.6f' %b,'%.6f' %c
+            if func_family=='f1':
+                f='{}n {} {}'.format('%.6f' %a,'-' if b < 0 else '+','%.6f' %np.abs(b))
+            elif func_family=='f2':
+                f='{}n {} {} {} {}/n'.format('%.6f' %a,'-' if b < 0 else '+','%.6f' %np.abs(b),'-' if c < 0 else '+','%.6f' %np.abs(c))
+            my_dict[('beta_{}'.format(s),func_family)]=f
+            #print('{} & beta_{} & {}'.format(k,s,f))
+    return my_dict
+
+
+def get_theory_solution(problem,k,s,if_alpha=True):
+    if if_alpha:
+        if problem==2 and k==3 and s==3:
+            theory_solution_alpha=1/np.sqrt(e)
+        elif problem==2 and k==3 and s==2:
+            theory_solution_alpha=2/(2*np.sqrt(e)+np.sqrt(4*e-6*np.sqrt(e)))
+        elif problem==2 and k==2 and s==2:
+            theory_solution_alpha=0.5
+        elif problem<=3 and k==1 and s==1:
+            theory_solution_alpha=1/e
+        elif problem==3 and k==2 and s==1:
+            theory_solution_alpha=0.3469816097075797772 #gilbert1966 solution of e^(x-1)=2x/3
+        elif problem==3 and k==2 and s==2:
+            theory_solution_alpha=2/3
+        elif problem == 1 and s==1:
+            theory_solution_alpha=0.2584
+        elif problem == 1 and s==2:
+            theory_solution_alpha=0.4476
+        elif problem == 1 and s==3:
+            theory_solution_alpha=0.5640
+        else:
+            theory_solution_alpha=0
+        return theory_solution_alpha
+        
+    else:
+        return 0
 
 def alpha_threshold_finder_for_multiple_N_bkp(Ns,problem,k,s):
     '''this function finds the threshold alphas for the given problem for all N, for the relative rank s'''
